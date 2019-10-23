@@ -3,14 +3,11 @@ function buildMetadata(sample) {
   // @TODO: Complete the following function that builds the metadata panel
 
   // Use `d3.json` to fetch the metadata for a sample
-  var megadata = d3.csv("/../../db/belly_button_metadata.csv").then(function(data) {
-    console.log(data[0]);
-  });
-  var belly_data = d3.csv("/../../db/belly_belly_button_data.csv").then(function(data) {
-    console.log(data[0]);
-  });
-  
-    // Use d3 to select the panel with id of `#sample-metadata`
+  d3.json("/metadata/"+sample,function(dataMeta){
+// Use d3 to select the panel with id of ``
+console.log(d3.select("#selDataset").property("value"));
+  })
+    
 
     // Use `.html("") to clear any existing metadata
 
