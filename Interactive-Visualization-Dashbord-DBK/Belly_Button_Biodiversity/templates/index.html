@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .tooltip {
+      position: absolute;
+      width: 535px;
+      height: 60px;
+      padding: 2px;
+      padding-top: 8px;
+      font: 12px sans-serif;
+      color: white;
+      text-align: right;
+      background: #551aaf;
+      border: 0;
+      border-radius: 10px;
+    }
+
+    .axisText {
+      font-family: sans-serif;
+      font-weight: bold;
+      fill: #551aaf;
+      text-anchor: middle;
+    }
+  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Flask Plotlyjs Example</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.min.js"></script>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 jumbotron text-center">
+        <h1>Belly Button Biodiversity Dashboard</h1>
+        <p>Use the interactive charts below to explore the dataset</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-2">
+        <div class="well">
+          <h5>SELECT Sample:</h5>
+          <select id="selDataset" onchange="optionChanged(this.value)"></select>
+        </div>
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Sample MetaData</h3>
+          </div>
+          <div id="sample-metadata" class="panel-body"></div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div id="pie"></div>
+      </div>
+      <div class="col-md-5">
+        <div id="gauge"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <div id="bubble"></div>
+    </div>
+  </div>
+
+  <!-- <script src="https://cdn.plot.ly/plotly-1.31.2.min.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+  <script>
+    function buildMetadata(sample) {
+      console.log(sample)
+      // @TODO: Complete the following function that builds the metadata panel
+
+      // Use `d3.json` to fetch the metadata for a sample
+
+      d3.json("/metadata/" + sample.toString()).then(function (dataMeta) {
+        // Use d3 to select the panel with id of ``
+        console.log(d3.select("#selDataset").property("value"));
+        console.log(Object.keys(dataMeta))
+        // Use `.html("") to clear any existing metadata
+        var key_list = [];
+        var value_list = [];
+        var both_list = [[], []]
+        for (var key in dataMeta) {
+          //key will be -> 'id'
+          //dictionary[key] -> 'value'
+          value_list.push(dataMeta[key]);
+          key_list.push(key)
+          both_list[0].push(key);
+          both_list[1].push(dataMeta[key])
+        }
+
+        d3.select("#sample-metadata").html("");
+
+        var table = d3.select("#sample-metadata").append("table").attr("id", "table1");
+        thead = table.append("thead");
+        tbody = table.append("tbody");
+
+        function tr(tbody, both_list, ct) {
+          var a = both_list[0][ct].toString() + ":        " + both_list[1][ct].toString()
+          console.log(a)
+          tbody.append("tr").text(a)
+
+        }
+
+        for (var i = 0; i < both_list[0].length; i++) {
+          tr(tbody, both_list, i)
+        }
+
+
+
+
+
+
+      });
+
+
+
+
+
+
+
+
+      // Use `Object.entries` to add each key and value pair to the panel
+      // Hint: Inside the loop, you will need to use d3 to append new
+      // tags for each key-value in the metadata.
+
+      // BONUS: Build the Gauge Chart
+      // buildGauge(data.WFREQ);
+    }
+
+    function buildCharts(sample) {
+
+      // @TODO: Use `d3.json` to fetch the sample data for the plots
+      d3.json("/samples/" + sample.toString()).then(function (sample_data) {
+        console.log(sample_data);
+        var sample_values_list = [];
+        var otu_ids_list = [];
+        var otu_labels_list = [];
+        var ct_list = [];
+        var ct = 0;
+
+        var sample_values_list_ordered = sample_data.sample_values.sort(function (a, b) { return b - a });
+        for (var j = 0; j < 10; j++) {
+          sample_values_list.push(sample_values_list_ordered[j]);
+        };
+        console.log(sample_values_list)
+        //console.log(sample_values_list_ordered)
+        for (var i = 0; i < sample_data.sample_values.length; i++) {
+          for (var k = 0; k < sample_data.sample_values.length; k++) {
+            if (sample_data.sample_values[k] === sample_values_list[ct]) {
+              ct_list.push(k)
+              ct = ct + 1;
+            }
+          }
+        }
+        console.log(ct_list);
+        var sample_values_list2 = [];
+        var otu_ids_list2 = [];
+        var otu_labels_list2 = [];
+        for (var a = 0; a < ct_list.length; a++) {
+          sample_values_list2.push(sample_data.sample_values[ct_list[a]]);
+          otu_ids_list2.push(sample_data.otu_ids[ct_list[a]]);
+          otu_labels_list2.push(sample_data.otu_labels[ct_list[a]]);
+        }
+
+        console.log(sample_values_list2);
+        console.log(otu_ids_list2);
+        console.log(otu_labels_list2);
+
+
+        //////////////////////////////////////////////////////
+        // margin
+        var margin = { top: 20, right: 80, bottom: 20, left: 180 },
+          width = 700 - margin.right - margin.left,
+          height = 700 - margin.top - margin.bottom,
+          radius = width / 2;
+
+
+        var div = d3.select("body").append("div")
+          .attr("class", "tooltip")
+          .style("opacity", 0);
+        // color range
+        var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+
+        // pie chart arc. Need to create arcs before generating pie
+        var arc = d3.arc()
+          .outerRadius(radius - 10)
+          .innerRadius(0);
+
+
+
+        // arc for the labels position
+        var labelArc = d3.arc()
+          .outerRadius(radius / 2)
+          .innerRadius(radius / 2);
+
+        // generate pie chart and donut chart
+        var pie = d3.pie()
+          .sort(null)
+          .value(function (d) { return d.count; });
+
+        // define the svg for pie chart
+        var svg = d3.select("#pie").append("svg")
+          .attr("width", width + margin.right + margin.left + 100)
+          .attr("height", height)
+          .append("g")
+          .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+
+
+        var sampleValueSum = 0;
+        for (var j = 0; j < 10; j++) {
+          sampleValueSum = sampleValueSum + sample_values_list2[j];
+        }
+        var sampleValueAvg = []
+        for (var j = 0; j < 10; j++) {
+          var a = 100 * sample_values_list2[j] / sampleValueSum;
+          var b = a.toFixed(2).toString() + "%"
+          sampleValueAvg.push(b.toString())
+        }
+
+
+        console.log(sampleValueAvg[9])
+        console.log(sample_values_list2[0]);
+        console.log(sample_values_list2[1]);
+        console.log(sample_values_list2[2]);
+        console.log(sample_values_list2[3]);
+        console.log(sample_values_list2[4]);
+        console.log(sample_values_list2[5]);
+        console.log(sample_values_list2[6]);
+        console.log(sample_values_list2[7]);
+        console.log(sample_values_list2[8]);
+        console.log(sample_values_list2[9]);
+
+
+        //var sampleValueAvg = sampleValueSum/sample_values_list2.length;
+        data = [
+          { "fruit": sampleValueAvg[0], "count": sample_values_list2[0], "label": otu_labels_list2[0] },
+          { "fruit": sampleValueAvg[1], "count": sample_values_list2[1], "label": otu_labels_list2[1] },
+          { "fruit": sampleValueAvg[2], "count": sample_values_list2[2], "label": otu_labels_list2[2] },
+          { "fruit": sampleValueAvg[3], "count": sample_values_list2[3], "label": otu_labels_list2[3] },
+          { "fruit": sampleValueAvg[4], "count": sample_values_list2[4], "label": otu_labels_list2[4] },
+          { "fruit": sampleValueAvg[5], "count": sample_values_list2[5], "label": otu_labels_list2[5] },
+          { "fruit": sampleValueAvg[6], "count": sample_values_list2[6], "label": otu_labels_list2[6] },
+          { "fruit": sampleValueAvg[7], "count": sample_values_list2[7], "label": otu_labels_list2[7] },
+          { "fruit": sampleValueAvg[8], "count": sample_values_list2[8], "label": otu_labels_list2[8] },
+          { "fruit": sampleValueAvg[9], "count": sample_values_list2[9], "label": otu_labels_list2[9] }
+        ]
+        // data = [];
+
+        // for(var i = 0;i<10;i++){
+        // data.push({})
+        // }
+
+
+        // import data 
+
+        console.log(data);
+        // parse data
+        data.forEach(function (d) {
+          d.count = +d.count;
+          d.fruit = d.fruit;
+        })
+
+        // "g element is a container used to group other SVG elements"
+        var g = svg.selectAll(".arc")
+          .data(pie(data))
+          .enter().append("g")
+          .attr("class", "arc");
+
+
+
+        // append path 
+        g.append("path")
+          .attr("d", arc)
+          .attr("data-legend", function (d) { return d.data.label; })
+          .attr("data-legend-pos", function (d, i) { return i; })
+          .style("fill", function (d) { return color(d.data.fruit); })
+          // transition 
+          .transition()
+          .ease(d3.easeLinear)
+          .duration(2000)
+          .attrTween("d", tweenPie)
+
+
+        // append text
+        g.append("text")
+          .transition()
+          .ease(d3.easeLinear)
+          .duration(2000)
+          .attr("transform", function (d) { return "translate(" + labelArc.centroid(d) + ")"; })
+          .attr("dy", ".35em")
+          .text(function (d) { return d.data.fruit; });
+
+
+
+        var piecolors = d3.scale.category20c();
+
+
+        var legend = svg.selectAll('.legend-entry').data(data)
+          .enter().append('g')
+          .attr('class', 'legend-entry')
+
+        legend.append('rect')
+          .attr('class', 'legend-rect')
+          .attr('x', width / 2 + 20)
+          .attr('y', function (d, i) { return i * 20 - 10 })
+          .attr('width', 10)
+          .attr('height', 10)
+          .attr('fill', function (d) {
+            return color(d.fruit);
+          })
+
+        legend.append('text')
+          .attr('class', 'legend-text')
+          .attr('x', width / 2 + 30)
+          .attr('y', function (d, i) { return i * 20 })
+          .text(function (d) {
+            return d.label
+          })
+
+
+
+
+        // Helper function for animation of pie chart and donut chart
+        function tweenPie(b) {
+          b.innerRadius = 0;
+          var i = d3.interpolate({ startAngle: 0, endAngle: 0 }, b);
+          return function (t) { return arc(i(t)); };
+        }
+
+
+
+        ////////////////////////////////
+        ///////////////////////////////
+
+
+        // set up dimentions of graph
+
+
+
+
+
+        console.log(sample_data);
+
+
+        bubble_otu_ids = sample_data.otu_ids;
+        bubble_sample_values = sample_data.sample_values;
+        bubble_otu_labels = sample_data.otu_labels;
+        scatterList = [];
+        for (var i = 0; i < sample_data.sample_values.length; i++) {
+          scatterList.push({
+            "otu_ids": bubble_otu_ids[i],
+            "sample_values": bubble_sample_values[i],
+            "otu_labels": bubble_otu_labels[i]
+          });
+        };
+
+
+        console.log();
+
+        // append the svg object to the body of the page
+        var svg2 = d3.select("#bubble")
+          .append("svg")
+          .attr("width", width + margin.left  + margin.right+100)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+
+        var x = d3.scaleLinear()
+          .domain([0, 3500])
+          .range([0, width]);
+        svg2.append("g")
+          .attr("transform", "translate(100," + height + ")")
+          .call(d3.axisBottom(x));
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, 250])
+          .range([height, 0]);
+        svg2.append("g")
+        .attr("transform", "translate(100," + 0 + ")")
+          .call(d3.axisLeft(y));
+
+        var gg = svg2.append('g')
+          .selectAll("dot")
+          .data(scatterList)
+          .enter()
+          .append("circle")
+          .attr("cx", function (d) { return x(d.otu_ids)+100; })
+          .attr("cy", function (d) { return y(d.sample_values); })
+          .attr("r", function (d) { return (d.sample_values); })
+          .style("fill", function (d) { return (d.otu_ids); });
+
+
+
+        var toolTip = d3.tip()
+          .attr("class", "tooltip")
+          .offset([80, -60])
+          .html(function (d) {
+          
+            return (`${d.data.label}`);
+          });
+
+        // Step 7: Create tooltip in the chart
+        // ==============================
+        d3.select("#pie").append("svg")
+          .attr("width", width + margin.right + margin.left + 100)
+          .attr("height", height).call(toolTip);
+
+        // Step 8: Create event listeners to display and hide the tooltip
+        // ==============================
+        g.on("mouseover", function (data) {
+          toolTip.show(data, this);
+        })
+          // onmouseout event
+          .on("mouseout", function (data, index) {
+            toolTip.hide(data);
+          });
+
+
+
+
+        var toolTip2 = d3.tip()
+          .attr("class", "tooltip")
+          .offset([80, -60])
+          .html(function (d) {
+        
+            return (`${d.otu_labels}`);
+          });
+
+        // Step 7: Create tooltip in the chart
+        // ==============================
+        d3.select("#bubble").append("svg")
+          .attr("width", width + margin.right + margin.left + 100)
+          .attr("height", height).call(toolTip2);
+
+        // Step 8: Create event listeners to display and hide the tooltip
+        // =============================
+        gg.on("mouseover", function (data) {
+          toolTip2.show(data, this);
+        })
+          // onmouseout event
+          .on("mouseout", function (data, index) {
+            toolTip2.hide(data);
+          });
+
+      })
+      // @TODO: Build a Bubble Chart using the sample data
+
+      // @TODO: Build a Pie Chart
+      // HINT: You will need to use slice() to grab the top 10 sample_values,
+      // otu_ids, and labels (10 each).
+    }
+
+    function init() {
+      // Grab a reference to the dropdown select element
+      var selector = d3.select("#selDataset");
+
+      // Use the list of sample names to populate the select options
+      d3.json("/names").then((sampleNames) => {
+        sampleNames.forEach((sample) => {
+          selector
+            .append("option")
+            .text(sample)
+            .property("value", sample);
+        });
+
+        // Use the first sample from the list to build the initial plots
+        const firstSample = sampleNames[0];
+
+        buildCharts(firstSample);
+        buildMetadata(firstSample);
+      });
+    }
+
+    function optionChanged(newSample) {
+      // Fetch new data each time a new sample is selected
+      d3.select("#pie").html("")
+      d3.select("#bubble").html("")
+      buildCharts(newSample);
+      buildMetadata(newSample);
+    }
+
+    // Initialize the dashboard
+    init();
+
+
+
+  </script>
+
+
+
+</body>
+
+</html>
